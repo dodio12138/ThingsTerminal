@@ -107,6 +107,7 @@ const calcDays = (startValue, endValue) => {
 };
 
 const hasParentDevice = (device) => Boolean(String(device.parent ?? "").trim());
+let statsYearSortByTime = false;
 
 export const renderCategorySelects = (selectedValue = "") => {
   const selects = document.querySelectorAll("[data-category-select]");
@@ -423,6 +424,7 @@ export const renderStats = () => {
       },
       { total: 0, converted: 0, unconverted: 0 }
     );
+  const rateNote = `汇率：$=7.2, £=9.2, €=7.8, HKD=0.92, JPY=0.048；未识别币种 ${valueSummary.unconverted} 台`;
 
   const categoryCounts = store.devices.reduce((acc, device) => {
     const category = device.category ?? "未分类";
@@ -463,10 +465,15 @@ export const renderStats = () => {
     })
     .join("");
 
-  const renderBars = (data) => {
+  const renderBars = (data, sortMode = "count") => {
     const max = Math.max(...Object.values(data), 1);
-    return Object.entries(data)
-      .sort((a, b) => b[1] - a[1])
+    const entries = Object.entries(data);
+    if (sortMode === "time") {
+      entries.sort((a, b) => Number(b[0]) - Number(a[0]));
+    } else {
+      entries.sort((a, b) => b[1] - a[1]);
+    }
+    return entries
       .map(
         ([label, value]) => `
           <div class="bar-row">
@@ -487,16 +494,23 @@ export const renderStats = () => {
       <div class="stat-card"><p>使用中</p><strong>${stats.active}</strong></div>
       <div class="stat-card"><p>已失去</p><strong>${stats.deleted}</strong></div>
       <div class="stat-card"><p>分类数量</p><strong>${stats.categories.length}</strong></div>
-      <div class="stat-card"><p>总价值（CNY）</p><strong>${formatCny(valueSummary.total)}</strong></div>
+      <div class="stat-card stat-card--hint">
+        <div class="stat-card__head">
+          <p>总价值（CNY）</p>
+          <div class="hint-window" role="tooltip">${rateNote}</div>
+        </div>
+        <strong>${formatCny(valueSummary.total)}</strong>
+      </div>
     </div>
-    <p class="empty">汇率：$=7.2, £=9.2, €=7.8, HKD=0.92, JPY=0.048；未识别币种 ${valueSummary.unconverted} 台</p>
     <div class="chart-card">
       <h3>分类分布</h3>
       ${renderBars(categoryCounts)}
     </div>
     <div class="chart-card">
-      <h3>入手年份</h3>
-      ${Object.keys(yearCounts).length ? renderBars(yearCounts) : "<p class=\"empty\">暂无入手年份数据</p>"}
+      <h3 class="chart-card__title">
+        <button class="title-toggle" type="button" data-year-sort-toggle>入手年份</button>
+      </h3>
+      ${Object.keys(yearCounts).length ? renderBars(yearCounts, statsYearSortByTime ? "time" : "count") : "<p class=\"empty\">暂无入手年份数据</p>"}
     </div>
     <div class="chart-card">
       <h3>分类概览</h3>
@@ -505,6 +519,14 @@ export const renderStats = () => {
       </div>
     </div>
   `;
+
+  const yearSortToggle = container.querySelector("[data-year-sort-toggle]");
+  if (yearSortToggle) {
+    yearSortToggle.addEventListener("click", () => {
+      statsYearSortByTime = !statsYearSortByTime;
+      renderStats();
+    });
+  }
 };
 
 export const renderDetail = () => {

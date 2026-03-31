@@ -115,10 +115,16 @@ body.pixel-ui .registry-title {
 
 .nav .menu {
   margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
+}
+
+.nav .menu li {
+  list-style: none;
 }
 
 .nav .menu button {
@@ -427,6 +433,9 @@ body.pixel-ui .registry-title {
 .category-card h3 {
   margin: 0 0 6px;
   font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .category-card p {
@@ -924,6 +933,43 @@ body.pixel-ui .registry-title {
   font-size: 24px;
 }
 
+.stat-card--hint {
+  position: relative;
+  cursor: help;
+}
+
+.stat-card__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.stat-card__head p {
+  margin: 0;
+}
+
+.hint-window {
+  display: none;
+  position: absolute;
+  left: 10px;
+  top: calc(100% - 4px);
+  z-index: 12;
+  max-width: min(360px, 92vw);
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  background: var(--panel);
+  border: 2px solid #000;
+  color: var(--ink);
+  box-shadow: inset -1px -1px 0 var(--panel-dark), inset 1px 1px 0 var(--panel-light);
+}
+
+.stat-card--hint:hover .hint-window,
+.stat-card--hint:focus-within .hint-window {
+  display: block;
+}
+
 .chart-card {
   background: var(--panel);
   border-radius: 0;
@@ -937,13 +983,39 @@ body.pixel-ui .registry-title {
   margin: 0 0 16px;
 }
 
+.chart-card__title {
+  margin: 0 0 16px;
+}
+
+.title-toggle {
+  all: unset;
+  display: inline-block;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.title-toggle:hover {
+  text-decoration: underline;
+}
+
+.title-toggle:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: 2px;
+}
+
 .bar-row {
   display: grid;
-  grid-template-columns: 120px 1fr 40px;
+  grid-template-columns: 180px 1fr 40px;
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;
   font-size: 14px;
+}
+
+.bar-row > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .bar-row .progress-indicator {
