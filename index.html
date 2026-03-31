@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>设备展示 · Things Terminal</title>
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="main.js"></script>
+  </head>
+  <body class="pixel-ui">
+    <div class="bg-aurora" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <div class="page">
+      <header class="nav window">
+        <div class="title-bar">
+          <div class="title-bar-text">Things Terminal DEVICE ARCHIVE</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="window-body">
+          <menu class="menu" role="menubar">
+            <li role="menuitem"><button class="is-active" type="button" data-nav="index.html">展示</button></li>
+            <li role="menuitem"><button type="button" data-nav="browse.html">搜索/筛选</button></li>
+            <li role="menuitem"><button type="button" data-nav="add.html">添加</button></li>
+            <li role="menuitem"><button type="button" data-nav="stats.html">统计</button></li>
+            <li role="menuitem"><button type="button" data-nav="admin.html">管理</button></li>
+          </menu>
+        </div>
+      </header>
+
+      <main>
+        <section class="window">
+          <div class="title-bar">
+              <div class="title-bar-text registry-title">PERSONAL DEVICE REGISTRY · 设备展示页</div>
+            <div class="title-bar-controls">
+              <button aria-label="Minimize"></button>
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="status-bar">
+            <p class="status-bar-field">总设备：<strong data-total>0</strong></p>
+            <p class="status-bar-field">使用中：<strong data-active>0</strong></p>
+            <p class="status-bar-field">已失去：<strong data-deleted>0</strong></p>
+          </div>
+          <div class="window-body">
+            <section class="hero hero--wide">
+              <div class="hero__content">
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section__title">
+                <h2>全部设备</h2>
+                <div class="section__tools">
+                  <label>
+                    排序
+                    <select data-sort-select>
+                      <option value="recent">按入手时间</option>
+                      <option value="price">按买入价格</option>
+                      <option value="days">按持有时间</option>
+                      <option value="daily">按每日成本</option>
+                    </select>
+                  </label>
+                  <label>
+                    子物品
+                    <select data-child-visibility>
+                      <option value="show">显示</option>
+                      <option value="hide">隐藏（仅主设备）</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <div class="cards" data-featured></div>
+            </section>
+
+            <div class="status-bar">
+              <p class="status-bar-field">展示页面：Overview</p>
+              <p class="status-bar-field">更新时间：2026-03-31</p>
+              <p class="status-bar-field">浏览入口：4 个</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </body>
+</html>

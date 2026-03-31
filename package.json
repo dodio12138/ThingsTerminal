@@ -1,0 +1,20 @@
+{
+  "name": "things-terminal",
+  "version": "1.0.0",
+  "description": "Personal device registry with Express + SQLite",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon --watch server.js --watch modules --ext js --exec node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

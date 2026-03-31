@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>搜索筛选 · Things Terminal</title>
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="main.js"></script>
+  </head>
+  <body>
+    <div class="bg-aurora" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <div class="page">
+      <header class="nav window">
+        <div class="title-bar">
+          <div class="title-bar-text">Things Terminal DEVICE ARCHIVE</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="window-body">
+          <menu class="menu" role="menubar">
+            <li role="menuitem"><button type="button" data-nav="index.html">展示</button></li>
+            <li role="menuitem"><button class="is-active" type="button" data-nav="browse.html">搜索/筛选</button></li>
+            <li role="menuitem"><button type="button" data-nav="add.html">添加</button></li>
+            <li role="menuitem"><button type="button" data-nav="stats.html">统计</button></li>
+            <li role="menuitem"><button type="button" data-nav="admin.html">管理</button></li>
+          </menu>
+        </div>
+      </header>
+
+      <main>
+        <section class="window">
+          <div class="title-bar">
+            <div class="title-bar-text">搜索 / 筛选</div>
+            <div class="title-bar-controls">
+              <button aria-label="Minimize"></button>
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body">
+            <div class="browse-layout">
+              <div class="browse-panel">
+                <div class="search-box">
+                  <input data-search type="text" placeholder="搜索设备名称或分类" />
+                </div>
+                <div>结果：<strong data-result-count>0</strong></div>
+                <button data-clear-filters>清空筛选</button>
+              </div>
+              <div class="filter-panel" data-filter-group></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="cards" data-browse-list></div>
+        </section>
+      </main>
+
+    </div>
+  </body>
+</html>

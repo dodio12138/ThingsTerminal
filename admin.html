@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>管理后台 · Things Terminal</title>
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="main.js"></script>
+  </head>
+  <body class="pixel-ui">
+    <div class="bg-aurora" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <div class="page">
+      <header class="nav window">
+        <div class="title-bar">
+          <div class="title-bar-text">Things Terminal DEVICE ARCHIVE</div>
+          <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="window-body">
+          <menu class="menu" role="menubar">
+            <li role="menuitem"><button type="button" data-nav="index.html">展示</button></li>
+            <li role="menuitem"><button type="button" data-nav="browse.html">搜索/筛选</button></li>
+            <li role="menuitem"><button type="button" data-nav="add.html">添加</button></li>
+            <li role="menuitem"><button type="button" data-nav="stats.html">统计</button></li>
+            <li role="menuitem"><button class="is-active" type="button" data-nav="admin.html">管理</button></li>
+          </menu>
+        </div>
+      </header>
+
+      <main>
+        <section class="window">
+          <div class="title-bar">
+            <div class="title-bar-text">ADMIN CONSOLE 设备管理后台</div>
+            <div class="title-bar-controls">
+              <button aria-label="Minimize"></button>
+              <button aria-label="Maximize"></button>
+              <button aria-label="Close"></button>
+            </div>
+          </div>
+          <div class="window-body">
+            <section class="admin-layout">
+              <div class="admin-panel">
+                <div class="admin-header">
+                  <h2>设备列表</h2>
+                  <div class="admin-tools">
+                    <span class="admin-selected" data-selected-count>已选 0</span>
+                    <button type="button" data-clear-selection>清空选择</button>
+                    <button data-admin-reset>新建设备</button>
+                  </div>
+                </div>
+                <div class="admin-list" data-admin-list></div>
+              </div>
+
+              <form class="form admin-form" data-admin-form>
+                <label>
+                  编辑现有资产
+                  <select data-edit-select>
+                    <option value="">选择设备</option>
+                  </select>
+                </label>
+                <button type="button" data-load-edit>载入设备</button>
+                <div class="auth-banner">
+                  <label>
+                    管理密码
+                    <input name="adminPassword" data-admin-password type="password" placeholder="如启用管理密码请填写" />
+                  </label>
+                  <p class="form__status" data-auth-note></p>
+                </div>
+                <label>
+                  设备名称
+                  <input name="name" type="text" />
+                </label>
+                <label>
+                  分类
+                  <select name="category" data-category-select></select>
+                </label>
+                <label>
+                  品牌
+                  <input name="brand" type="text" />
+                </label>
+                <label>
+                  状态
+                  <select name="status">
+                    <option value="active">使用中</option>
+                    <option value="deleted">已失去</option>
+                  </select>
+                </label>
+                <label>
+                  图片路径
+                  <input name="imagePath" type="text" />
+                </label>
+              <div class="upload-row">
+                <label>
+                  上传图片
+                  <input name="imageFile" data-image-file type="file" accept="image/*" />
+                </label>
+                <button type="button" data-upload-btn>上传到服务器</button>
+                <span class="form__status" data-upload-status></span>
+              </div>
+              <label>
+                入手时间
+                <input name="acquired" type="month" />
+              </label>
+              <label>
+                买入价格
+                <div class="price-input">
+                  <input name="buyPrice" type="number" min="0" step="0.01" placeholder="例如：220" />
+                  <select name="buyCurrency">
+                    <option value="CNY">￥ 人民币</option>
+                    <option value="USD">$ 美元</option>
+                    <option value="GBP">£ 英镑</option>
+                    <option value="EUR">€ 欧元</option>
+                    <option value="HKD">HK$ 港币</option>
+                    <option value="JPY">¥ 日元</option>
+                  </select>
+                </div>
+              </label>
+              <label>
+                失去时间
+                <input name="lost" type="month" />
+              </label>
+              <label>
+                卖出价格
+                <div class="price-input">
+                  <input name="sellPrice" type="number" min="0" step="0.01" placeholder="例如：3000" />
+                  <select name="sellCurrency">
+                    <option value="CNY">￥ 人民币</option>
+                    <option value="USD">$ 美元</option>
+                    <option value="GBP">£ 英镑</option>
+                    <option value="EUR">€ 欧元</option>
+                    <option value="HKD">HK$ 港币</option>
+                    <option value="JPY">¥ 日元</option>
+                  </select>
+                </div>
+              </label>
+                <label>
+                  入手地点
+                  <input name="acquiredLocation" type="text" />
+                </label>
+                <label>
+                  失去地点
+                  <input name="lostLocation" type="text" />
+                </label>
+                <label>
+                  归属/父级
+                  <input name="parent" type="text" />
+                </label>
+                <label>
+                  入手备注
+                  <textarea name="acquiredTip" rows="2"></textarea>
+                </label>
+                <label>
+                  失去备注
+                  <textarea name="lostTip" rows="2"></textarea>
+                </label>
+                <label>
+                  规格（每行一条）
+                  <textarea name="specs" rows="4"></textarea>
+                </label>
+                <div class="category-editor">
+                <label>
+                  新分类名称
+                  <input name="newCategory" data-new-category type="text" placeholder="例如：🎧 Audio" />
+                </label>
+                <button type="button" data-add-category>添加分类</button>
+              </div>
+              <div class="bulk-editor">
+                <h3>批量操作</h3>
+                <div class="bulk-row">
+                  <select data-bulk-category></select>
+                  <select data-bulk-status>
+                    <option value="">状态不变</option>
+                    <option value="active">使用中</option>
+                    <option value="deleted">已失去</option>
+                  </select>
+                  <input data-bulk-brand type="text" placeholder="品牌（可选）" />
+                  <button type="button" data-bulk-apply>批量更新</button>
+                </div>
+                <div class="bulk-row">
+                  <button type="button" data-bulk-delete>批量删除</button>
+                  <button type="button" data-export-json>导出 JSON</button>
+                  <select data-import-mode>
+                    <option value="append">导入模式：追加</option>
+                    <option value="replace">导入模式：覆盖</option>
+                  </select>
+                    <label class="upload-inline">
+                      导入 JSON
+                      <input data-import-json type="file" accept="application/json" />
+                    </label>
+                  </div>
+                <div class="import-preview" data-import-preview>
+                  <p class="empty">选择 JSON 文件后会显示导入预览。</p>
+                  <button type="button" data-import-confirm disabled>确认导入</button>
+                </div>
+              </div>
+              <div class="form__actions">
+                <button type="submit">保存修改</button>
+                <span class="form__status" data-admin-status></span>
+              </div>
+              </form>
+            </section>
+          </div>
+        </section>
+      </main>
+
+    </div>
+  </body>
+</html>
