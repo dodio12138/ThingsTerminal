@@ -203,6 +203,35 @@ export const renderIndex = () => {
   const featured = document.querySelector("[data-featured]");
   const sortSelect = document.querySelector("[data-sort-select]");
   const childVisibilitySelect = document.querySelector("[data-child-visibility]");
+  const categoryFilterSelect = document.querySelector("[data-index-category-filter]");
+  const brandFilterSelect = document.querySelector("[data-index-brand-filter]");
+  if (categoryFilterSelect) {
+    const categories = Array.from(new Set(store.devices.map((d) => d.category ?? "未分类")))
+      .sort((a, b) => a.localeCompare(b, "zh-CN"));
+    const current = categoryFilterSelect.value || "all";
+    categoryFilterSelect.innerHTML = [
+      `<option value="all">全部类别</option>`,
+      ...categories.map((category) => `<option value="${category}">${category}</option>`)
+    ].join("");
+    categoryFilterSelect.value = categories.includes(current) ? current : "all";
+  }
+  if (brandFilterSelect) {
+    const brands = Array.from(
+      new Set(
+        store.devices
+          .map((d) => String(d.brand ?? "").trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b, "zh-CN"));
+    const current = brandFilterSelect.value || "all";
+    const allowed = new Set(["all", "__none__", ...brands]);
+    brandFilterSelect.innerHTML = [
+      `<option value="all">全部品牌</option>`,
+      ...brands.map((brand) => `<option value="${brand}">${brand}</option>`),
+      `<option value="__none__">无品牌</option>`
+    ].join("");
+    brandFilterSelect.value = allowed.has(current) ? current : "all";
+  }
   if (sortSelect && !sortSelect.dataset.bound) {
     sortSelect.dataset.bound = "true";
     sortSelect.addEventListener("change", () => renderIndex());
@@ -211,12 +240,30 @@ export const renderIndex = () => {
     childVisibilitySelect.dataset.bound = "true";
     childVisibilitySelect.addEventListener("change", () => renderIndex());
   }
+  if (categoryFilterSelect && !categoryFilterSelect.dataset.bound) {
+    categoryFilterSelect.dataset.bound = "true";
+    categoryFilterSelect.addEventListener("change", () => renderIndex());
+  }
+  if (brandFilterSelect && !brandFilterSelect.dataset.bound) {
+    brandFilterSelect.dataset.bound = "true";
+    brandFilterSelect.addEventListener("change", () => renderIndex());
+  }
   if (featured) {
     const sortMode = sortSelect?.value || "recent";
     const childMode = childVisibilitySelect?.value || "show";
-    const filtered = childMode === "hide"
+    const categoryMode = categoryFilterSelect?.value || "all";
+    const brandMode = brandFilterSelect?.value || "all";
+    let filtered = childMode === "hide"
       ? store.devices.filter((device) => !hasParentDevice(device))
       : store.devices;
+    if (categoryMode !== "all") {
+      filtered = filtered.filter((device) => (device.category ?? "未分类") === categoryMode);
+    }
+    if (brandMode === "__none__") {
+      filtered = filtered.filter((device) => !String(device.brand ?? "").trim());
+    } else if (brandMode !== "all") {
+      filtered = filtered.filter((device) => String(device.brand ?? "").trim() === brandMode);
+    }
 
     const sorted = [...filtered].sort((a, b) => {
       if (sortMode === "price") {
