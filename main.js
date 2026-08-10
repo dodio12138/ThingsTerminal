@@ -1,4 +1,4 @@
-import { fetchMeta, fetchDevices, fetchCategories } from "./modules/api.js";
+import { fetchMeta, fetchDevices, fetchCategories, fetchSettings } from "./modules/api.js";
 import { initAuthFields, renderIndex, renderBrowse, renderStats, renderDetail, initAddPage, renderCategorySelects } from "./modules/render.js";
 import { initAdmin } from "./modules/admin.js";
 
@@ -15,15 +15,23 @@ const refreshDevices = async () => {
 };
 
 const init = async () => {
+  document.querySelectorAll(".title-bar-controls button").forEach((button) => {
+    button.type = "button";
+    button.tabIndex = -1;
+    button.setAttribute("aria-hidden", "true");
+  });
   document.querySelectorAll("[data-nav]").forEach((button) => {
+    const target = button.getAttribute("data-nav");
+    if (target && window.location.pathname.endsWith(target)) {
+      button.setAttribute("aria-current", "page");
+    }
     button.addEventListener("click", () => {
-      const target = button.getAttribute("data-nav");
       if (target) window.location.href = target;
     });
   });
 
   await fetchMeta();
-  await fetchCategories();
+  await Promise.all([fetchCategories(), fetchSettings()]);
   initAuthFields();
   renderCategorySelects();
 

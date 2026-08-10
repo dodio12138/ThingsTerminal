@@ -4,11 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>设备展示 · Things Terminal</title>
-    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/vendor/98.css" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="main.js"></script>
   </head>
   <body class="pixel-ui">
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <div class="bg-aurora" aria-hidden="true"></div>
     <div class="bg-grid" aria-hidden="true"></div>
 
@@ -33,7 +35,7 @@
         </div>
       </header>
 
-      <main>
+      <main id="main-content" tabindex="-1">
         <section class="window">
           <div class="title-bar">
               <div class="title-bar-text registry-title">PERSONAL DEVICE REGISTRY · 设备展示页</div>
@@ -49,15 +51,10 @@
             <p class="status-bar-field">已失去：<strong data-deleted>0</strong></p>
           </div>
           <div class="window-body">
-            <section class="hero hero--wide">
-              <div class="hero__content">
-              </div>
-            </section>
-
-            <section class="section">
+            <section class="section section--primary">
               <div class="section__title">
-                <h2>全部设备</h2>
-                <div class="section__tools">
+                <div class="section__heading"><h1>全部设备</h1><p>按常用条件快速整理你的设备档案。</p></div>
+                <div class="section__tools" aria-label="设备显示选项">
                   <label>
                     排序
                     <select data-sort-select>
@@ -93,9 +90,8 @@
             </section>
 
             <div class="status-bar">
-              <p class="status-bar-field">展示页面：Overview</p>
-              <p class="status-bar-field">更新时间：2026-03-31</p>
-              <p class="status-bar-field">浏览入口：4 个</p>
+              <p class="status-bar-field">模块：Overview</p>
+              <p class="status-bar-field">可从搜索页使用更多筛选</p>
             </div>
           </div>
         </section>

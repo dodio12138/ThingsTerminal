@@ -4,11 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>搜索筛选 · Things Terminal</title>
-    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/vendor/98.css" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="main.js"></script>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <div class="bg-aurora" aria-hidden="true"></div>
     <div class="bg-grid" aria-hidden="true"></div>
 
@@ -33,7 +35,7 @@
         </div>
       </header>
 
-      <main>
+      <main id="main-content" tabindex="-1">
         <section class="window">
           <div class="title-bar">
             <div class="title-bar-text">搜索 / 筛选</div>
@@ -45,11 +47,12 @@
           </div>
           <div class="window-body">
             <div class="browse-layout">
-              <div class="browse-panel">
+              <div class="browse-panel browse-toolbar">
                 <div class="search-box">
-                  <input data-search type="text" placeholder="搜索设备名称或分类" />
+                  <label class="sr-only" for="device-search">搜索设备</label>
+                  <input id="device-search" data-search type="search" placeholder="搜索名称、分类、品牌或标签" autocomplete="off" />
                 </div>
-                <div>结果：<strong data-result-count>0</strong></div>
+                <div class="browse-result" aria-live="polite">结果：<strong data-result-count>0</strong></div>
                 <button data-clear-filters>清空筛选</button>
               </div>
               <div class="filter-panel" data-filter-group></div>

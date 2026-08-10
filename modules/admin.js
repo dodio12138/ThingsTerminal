@@ -4,6 +4,8 @@ import { store } from "./store.js";
 import {
   uploadImage,
   createCategory,
+  renameCategory,
+  deleteCategory,
   updateDevice,
   createDevice,
   deleteDevice,
@@ -11,11 +13,14 @@ import {
   bulkDelete,
   exportDevices,
   importDevices,
+  cleanupUploads,
+  updateSettings,
   fetchDevices,
   fetchCategories
 } from "./api.js";
-import { renderCategorySelects } from "./render.js";
+import { renderCategorySelects, renderParentSelects } from "./render.js";
 import { normalizeSpecs } from "./schema.js";
+import { escapeHtml } from "./dom.js";
 
 const getSelectedIds = (listEl) =>
   Array.from(listEl.querySelectorAll("[data-select-id]:checked")).map((input) => input.dataset.selectId);
@@ -40,6 +45,8 @@ export const initAdmin = () => {
   const bulkApply = document.querySelector("[data-bulk-apply]");
   const bulkDeleteBtn = document.querySelector("[data-bulk-delete]");
   const exportBtn = document.querySelector("[data-export-json]");
+  const exportCsvBtn = document.querySelector("[data-export-csv]");
+  const cleanupUploadsBtn = document.querySelector("[data-cleanup-uploads]");
   const importInput = document.querySelector("[data-import-json]");
   const importMode = document.querySelector("[data-import-mode]");
   const importPreview = document.querySelector("[data-import-preview]");
@@ -48,6 +55,16 @@ export const initAdmin = () => {
   const loadEditBtn = document.querySelector("[data-load-edit]");
   const adminPanel = listEl.closest(".admin-panel");
   const adminHeader = adminPanel?.querySelector(".admin-header");
+  const manageCategory = document.querySelector("[data-manage-category]");
+  const categoryNewName = document.querySelector("[data-category-new-name]");
+  const renameCategoryBtn = document.querySelector("[data-rename-category]");
+  const categoryMergeTarget = document.querySelector("[data-category-merge-target]");
+  const deleteCategoryBtn = document.querySelector("[data-delete-category]");
+  const baseCurrency = document.querySelector("[data-base-currency]");
+  const fxSource = document.querySelector("[data-fx-source]");
+  const fxUpdated = document.querySelector("[data-fx-updated]");
+  const fxRates = document.querySelector("[data-fx-rates]");
+  const saveSettingsBtn = document.querySelector("[data-save-settings]");
 
   let pendingImport = null;
 
@@ -80,7 +97,7 @@ export const initAdmin = () => {
     const current = editSelect.value;
     editSelect.innerHTML = [
       `<option value="">选择设备</option>`,
-      ...store.devices.map((device) => `<option value="${device.id}">${device.name}</option>`)
+      ...store.devices.map((device) => `<option value="${device.id}">${escapeHtml(device.name)}</option>`)
     ].join("");
     if (current) editSelect.value = current;
   };
@@ -94,8 +111,8 @@ export const initAdmin = () => {
               <input type="checkbox" data-select-id="${device.id}" />
             </label>
             <div>
-              <strong>${device.name}</strong>
-              <p>${device.category ?? "未分类"} · ${device.acquired ?? "-"}</p>
+              <strong>${escapeHtml(device.name)}</strong>
+              <p>${escapeHtml(device.category ?? "未分类")} · ${escapeHtml(device.acquired ?? "-")}</p>
             </div>
             <div class="admin-row__actions">
               <button data-edit-id="${device.id}">编辑</button>
@@ -106,6 +123,7 @@ export const initAdmin = () => {
       )
       .join("");
     renderEditSelect();
+    renderParentSelects(form?.dataset.editId ? form.querySelector("[name=parentId]")?.value : "");
     requestAnimationFrame(syncListMaxHeight);
   };
 
@@ -113,6 +131,39 @@ export const initAdmin = () => {
     if (!selectedCount) return;
     const count = listEl.querySelectorAll("[data-select-id]:checked").length;
     selectedCount.textContent = `已选 ${count}`;
+  };
+
+  const renderCategoryManagement = () => {
+    const options = store.categories.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+    if (manageCategory) manageCategory.innerHTML = options || `<option value="">暂无分类</option>`;
+    if (categoryMergeTarget) {
+      categoryMergeTarget.innerHTML = `<option value="">删除后设为未分类</option>${options}`;
+    }
+  };
+
+  const refreshCategoryUi = async () => {
+    await fetchCategories();
+    renderCategorySelects();
+    renderCategoryManagement();
+    if (bulkCategory) {
+      bulkCategory.innerHTML = [
+        `<option value="__keep__">分类不变</option>`,
+        `<option value="__uncat__">未分类</option>`,
+        ...store.categories.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
+      ].join("");
+    }
+  };
+
+  const renderSettings = () => {
+    if (!store.settings) return;
+    if (baseCurrency) baseCurrency.value = store.settings.baseCurrency;
+    if (fxSource) fxSource.value = store.settings.fxSource;
+    if (fxUpdated) fxUpdated.value = store.settings.fxUpdatedAt;
+    if (fxRates) {
+      fxRates.value = Object.entries(store.settings.fxRates)
+        .map(([currency, rate]) => `${currency}=${rate}`)
+        .join("\n");
+    }
   };
 
   const fillForm = (device) => {
@@ -135,12 +186,18 @@ export const initAdmin = () => {
     form.querySelector("[name=lostTip]").value = device?.lostTip ?? "";
     form.querySelector("[name=acquiredLocation]").value = device?.acquiredLocation ?? "";
     form.querySelector("[name=lostLocation]").value = device?.lostLocation ?? "";
-    form.querySelector("[name=parent]").value = device?.parent ?? "";
+    renderParentSelects(device?.parentId ?? "");
+    form.querySelector("[name=parentId]").value = device?.parentId ?? "";
+    form.querySelector("[name=warrantyUntil]").value = device?.warrantyUntil ?? "";
+    form.querySelector("[name=tags]").value = (device?.tags ?? []).join(", ");
     form.querySelector("[name=specs]").value = (device?.specs ?? []).join("\n");
   };
 
   renderCategorySelects();
+  renderParentSelects();
   renderList();
+  renderCategoryManagement();
+  renderSettings();
   updateSelectedCount();
   requestAnimationFrame(syncListMaxHeight);
   window.addEventListener("resize", syncListMaxHeight);
@@ -153,7 +210,7 @@ export const initAdmin = () => {
     bulkCategory.innerHTML = [
       `<option value="__keep__">分类不变</option>`,
       `<option value="__uncat__">未分类</option>`,
-      ...store.categories.map((name) => `<option value="${name}">${name}</option>`)
+      ...store.categories.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
     ].join("");
   }
 
@@ -246,19 +303,49 @@ export const initAdmin = () => {
       if (!name) return;
       try {
         await createCategory(name);
+        await refreshCategoryUi();
         renderCategorySelects(name);
-        if (bulkCategory) {
-          bulkCategory.innerHTML = [
-            `<option value="__keep__">分类不变</option>`,
-            `<option value="__uncat__">未分类</option>`,
-            ...store.categories.map((cat) => `<option value="${cat}">${cat}</option>`)
-          ].join("");
-          bulkCategory.value = name;
-        }
+        if (bulkCategory) bulkCategory.value = name;
         newCategoryInput.value = "";
         if (statusEl) statusEl.textContent = "已添加分类";
       } catch (error) {
         if (statusEl) statusEl.textContent = error.message || "添加分类失败";
+      }
+    });
+  }
+
+  if (renameCategoryBtn && manageCategory && categoryNewName) {
+    renameCategoryBtn.addEventListener("click", async () => {
+      const current = manageCategory.value;
+      const next = categoryNewName.value.trim();
+      if (!current || !next) return;
+      try {
+        await renameCategory(current, next);
+        await refreshCategoryUi();
+        await fetchDevices();
+        renderList();
+        categoryNewName.value = "";
+        if (statusEl) statusEl.textContent = "分类已重命名";
+      } catch (error) {
+        if (statusEl) statusEl.textContent = error.message || "重命名失败";
+      }
+    });
+  }
+
+  if (deleteCategoryBtn && manageCategory && categoryMergeTarget) {
+    deleteCategoryBtn.addEventListener("click", async () => {
+      const current = manageCategory.value;
+      const mergeInto = categoryMergeTarget.value || null;
+      if (!current || current === mergeInto) return;
+      if (!confirm(mergeInto ? `确定将“${current}”合并到“${mergeInto}”吗？` : `确定删除“${current}”并设为未分类吗？`)) return;
+      try {
+        await deleteCategory(current, mergeInto);
+        await refreshCategoryUi();
+        await fetchDevices();
+        renderList();
+        if (statusEl) statusEl.textContent = "分类已更新";
+      } catch (error) {
+        if (statusEl) statusEl.textContent = error.message || "分类更新失败";
       }
     });
   }
@@ -306,19 +393,46 @@ export const initAdmin = () => {
     });
   }
 
+  const downloadBlob = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (exportBtn) {
     exportBtn.addEventListener("click", async () => {
       try {
         const data = await exportDevices();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "devices-export.json";
-        a.click();
-        URL.revokeObjectURL(url);
+        downloadBlob(blob, `things-terminal-${new Date().toISOString().slice(0, 10)}.json`);
       } catch (error) {
         if (statusEl) statusEl.textContent = error.message || "导出失败";
+      }
+    });
+  }
+
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener("click", async () => {
+      try {
+        const blob = await exportDevices("csv");
+        downloadBlob(blob, `things-terminal-${new Date().toISOString().slice(0, 10)}.csv`);
+      } catch (error) {
+        if (statusEl) statusEl.textContent = error.message || "CSV 导出失败";
+      }
+    });
+  }
+
+  if (cleanupUploadsBtn) {
+    cleanupUploadsBtn.addEventListener("click", async () => {
+      if (!confirm("确定清理所有未被设备引用的上传图片吗？")) return;
+      try {
+        const result = await cleanupUploads();
+        if (statusEl) statusEl.textContent = `已清理 ${result.count ?? 0} 个文件`;
+      } catch (error) {
+        if (statusEl) statusEl.textContent = error.message || "图片清理失败";
       }
     });
   }
@@ -330,9 +444,10 @@ export const initAdmin = () => {
       const mode = importMode?.value || "append";
       try {
         const text = await file.text();
-        const items = JSON.parse(text);
+        const parsed = JSON.parse(text);
+        const items = Array.isArray(parsed) ? parsed : parsed?.items;
         if (!Array.isArray(items)) {
-          throw new Error("JSON 必须是数组");
+          throw new Error("JSON 必须是数组或包含 items 数组的导出对象");
         }
         const invalid = items.filter((item) => !item?.name);
         const valid = items.length - invalid.length;
@@ -348,11 +463,34 @@ export const initAdmin = () => {
         if (statusEl) statusEl.textContent = "已生成导入预览";
       } catch (error) {
         if (importPreview) {
-          importPreview.innerHTML = `<p class="empty">预览失败：${error.message || "格式错误"}</p>`;
+          importPreview.innerHTML = `<p class="empty">预览失败：${escapeHtml(error.message || "格式错误")}</p>`;
         }
         if (statusEl) statusEl.textContent = error.message || "预览失败";
       } finally {
         importInput.value = "";
+      }
+    });
+  }
+
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener("click", async () => {
+      const parsedRates = {};
+      for (const line of String(fxRates?.value || "").split("\n")) {
+        if (!line.trim()) continue;
+        const [currency, rawRate] = line.split("=");
+        parsedRates[String(currency || "").trim().toUpperCase()] = Number(rawRate);
+      }
+      try {
+        await updateSettings({
+          baseCurrency: baseCurrency?.value,
+          fxSource: fxSource?.value.trim(),
+          fxUpdatedAt: fxUpdated?.value,
+          fxRates: parsedRates
+        });
+        renderSettings();
+        if (statusEl) statusEl.textContent = "汇率设置已保存";
+      } catch (error) {
+        if (statusEl) statusEl.textContent = error.message || "设置保存失败";
       }
     });
   }
@@ -400,7 +538,9 @@ export const initAdmin = () => {
         lostTip: formData.get("lostTip")?.toString().trim() || null,
         acquiredLocation: formData.get("acquiredLocation")?.toString().trim() || null,
         lostLocation: formData.get("lostLocation")?.toString().trim() || null,
-        parent: formData.get("parent")?.toString().trim() || null,
+        parentId: formData.get("parentId")?.toString().trim() || null,
+        warrantyUntil: formData.get("warrantyUntil")?.toString().trim() || null,
+        tags: formData.get("tags")?.toString().split(",").map((tag) => tag.trim()).filter(Boolean) || [],
         specs: normalizeSpecs(formData.get("specs")?.toString() || "")
       };
 

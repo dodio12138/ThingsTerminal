@@ -11,5 +11,9 @@ services:
     environment:
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "1"
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      DATA_DIR: /app/data/runtime
+      DB_PATH: /app/data/runtime/devices.sqlite
+      UPLOAD_DIR: /app/public/uploads
     ports:
       - "3000:3000"

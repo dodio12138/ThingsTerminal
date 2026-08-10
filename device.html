@@ -4,11 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>设备详情 · Things Terminal</title>
-    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/vendor/98.css" />
     <link rel="stylesheet" href="styles.css" />
     <script type="module" src="main.js"></script>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <div class="bg-aurora" aria-hidden="true"></div>
     <div class="bg-grid" aria-hidden="true"></div>
 
@@ -33,15 +35,8 @@
         </div>
       </header>
 
-      <main>
-        <section class="hero hero--compact">
-          <div class="hero__content">
-            <p class="eyebrow">Detail View</p>
-            <h1>设备详情</h1>
-          </div>
-        </section>
-
-        <section class="section" data-device-detail></section>
+      <main id="main-content" tabindex="-1">
+        <section class="section section--primary" data-device-detail></section>
       </main>
 
     </div>

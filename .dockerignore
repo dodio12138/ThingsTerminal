@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+node_modules
+data/runtime
+data/backups
+public/uploads
+test-results
+playwright-report
+output
+*.log

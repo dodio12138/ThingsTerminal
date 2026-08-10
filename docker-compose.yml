@@ -1,11 +1,22 @@
-version: "3.8"
-
 services:
   app:
     build: .
+    environment:
+      NODE_ENV: production
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+      DATA_DIR: /app/data/runtime
+      DB_PATH: /app/data/runtime/devices.sqlite
+      UPLOAD_DIR: /app/public/uploads
     ports:
       - "3000:3000"
     volumes:
-      - ./data:/app/data
+      - ./data/runtime:/app/data/runtime
       - ./public/uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
