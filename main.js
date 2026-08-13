@@ -1,6 +1,8 @@
-import { fetchMeta, fetchDevices, fetchCategories } from "./modules/api.js";
+import { fetchMeta, fetchDevices, fetchCategories, fetchSettings } from "./modules/api.js";
 import { initAuthFields, renderIndex, renderBrowse, renderStats, renderDetail, initAddPage, renderCategorySelects } from "./modules/render.js";
 import { initAdmin } from "./modules/admin.js";
+import { initDisplaySettings } from "./modules/display-settings.js";
+import { initDeviceDetailDialog } from "./modules/device-detail-dialog.js";
 
 const refreshDevices = async () => {
   try {
@@ -15,15 +17,34 @@ const refreshDevices = async () => {
 };
 
 const init = async () => {
+  document.querySelectorAll(".title-bar-controls button").forEach((button) => {
+    button.type = "button";
+    button.tabIndex = -1;
+    button.setAttribute("aria-hidden", "true");
+  });
+  document.querySelectorAll(".nav .menu").forEach((menu) => {
+    if (menu.querySelector("[data-display-settings-open]")) return;
+    const item = document.createElement("li");
+    item.setAttribute("role", "menuitem");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.displaySettingsOpen = "true";
+    button.textContent = "设置";
+    item.append(button);
+    menu.append(item);
+  });
   document.querySelectorAll("[data-nav]").forEach((button) => {
+    const target = button.getAttribute("data-nav");
+    if (target && window.location.pathname.endsWith(target)) {
+      button.setAttribute("aria-current", "page");
+    }
     button.addEventListener("click", () => {
-      const target = button.getAttribute("data-nav");
       if (target) window.location.href = target;
     });
   });
 
   await fetchMeta();
-  await fetchCategories();
+  await Promise.all([fetchCategories(), fetchSettings()]);
   initAuthFields();
   renderCategorySelects();
 
@@ -41,6 +62,11 @@ const init = async () => {
   renderDetail();
   initAddPage();
   initAdmin();
+  initDisplaySettings({ onSave: () => {
+    renderIndex();
+    renderBrowse();
+  } });
+  initDeviceDetailDialog();
 
   window.addEventListener("focus", refreshDevices);
   document.addEventListener("visibilitychange", () => {

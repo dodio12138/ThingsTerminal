@@ -15,11 +15,14 @@
  * @property {string | null} acquiredLocation
  * @property {string | null} lostLocation
  * @property {string | null} parent
+ * @property {number | null} parentId
  * @property {number | null} buyPrice
  * @property {number | null} sellPrice
  * @property {string | null} buyCurrency
  * @property {string | null} sellCurrency
  * @property {string[]} specs
+ * @property {string[]} tags
+ * @property {string | null} warrantyUntil
  */
 
 /**

@@ -6,7 +6,8 @@ import { normalizeSpecs } from "./schema.js";
 const parseError = async (response) => {
   try {
     const data = await response.json();
-    if (data?.error) return data.error;
+    if (typeof data?.error === "string") return data.error;
+    if (data?.error?.message) return data.error.message;
   } catch {
     return "请求失败";
   }
@@ -49,6 +50,28 @@ export const fetchCategories = async () => {
   }
 };
 
+export const fetchSettings = async () => {
+  try {
+    const response = await fetch("/api/settings");
+    if (!response.ok) return store.settings;
+    store.settings = await response.json();
+  } catch {
+    // Keep the bundled offline settings when the endpoint is unavailable.
+  }
+  return store.settings;
+};
+
+export const updateSettings = async (payload) => {
+  const response = await apiFetch("/api/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  store.settings = await response.json();
+  return store.settings;
+};
+
 export const uploadImage = async (file) => {
   const formData = new FormData();
   formData.append("image", file);
@@ -68,6 +91,26 @@ export const createCategory = async (name) => {
   if (!response.ok) throw new Error(await parseError(response));
   store.categories = await response.json();
   return store.categories;
+};
+
+export const renameCategory = async (currentName, name) => {
+  const response = await apiFetch(`/api/categories/${encodeURIComponent(currentName)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json();
+};
+
+export const deleteCategory = async (name, mergeInto = null) => {
+  const response = await apiFetch(`/api/categories/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mergeInto })
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json();
 };
 
 export const createDevice = async (payload) => {
@@ -113,10 +156,10 @@ export const bulkDelete = async (ids) => {
   if (!response.ok) throw new Error(await parseError(response));
 };
 
-export const exportDevices = async () => {
-  const response = await apiFetch("/api/export");
+export const exportDevices = async (format = "json") => {
+  const response = await apiFetch(`/api/export?format=${encodeURIComponent(format)}`);
   if (!response.ok) throw new Error(await parseError(response));
-  return response.json();
+  return format === "csv" ? response.blob() : response.json();
 };
 
 export const importDevices = async (mode, items) => {
@@ -125,6 +168,12 @@ export const importDevices = async (mode, items) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mode, items })
   });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json();
+};
+
+export const cleanupUploads = async () => {
+  const response = await apiFetch("/api/uploads/cleanup", { method: "POST" });
   if (!response.ok) throw new Error(await parseError(response));
   return response.json();
 };

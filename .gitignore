@@ -1,0 +1,21 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Runtime data is created from the tracked seed database on first start.
+data/runtime/
+data/backups/
+public/uploads/
+
+# Test and browser artifacts
+coverage/
+test-results/
+playwright-report/
+output/playwright/
+.playwright-cli/
+tmp/
+*.sqlite-shm
+*.sqlite-wal
