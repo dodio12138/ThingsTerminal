@@ -2,6 +2,13 @@ import { store } from "../store.js";
 import { convertAmount, formatMoney, parsePrice } from "../../shared/finance.js";
 import { DEFAULT_SETTINGS } from "../../shared/constants.js";
 import { deviceDetailUrl, escapeHtml, safeImageUrl, thumbnailUrl } from "../dom.js";
+import { getCardMetaFields } from "../card-preferences.js";
+
+const RETRO_DEVICE_ILLUSTRATIONS = Object.freeze({
+  "MacBook Pro Early 2015": "/generated/retro-macbook-2015.png",
+  "Sony WH-1000XM5": "/generated/retro-headphones.png",
+  "DJI Pocket 3": "/generated/retro-dji-pocket-camera.png"
+});
 
 export const settings = () => store.settings || DEFAULT_SETTINGS;
 
@@ -12,7 +19,19 @@ export const getDeviceBuyPrice = (device) => {
   return parsePrice(device.acquiredTip);
 };
 
+export const getDeviceSellPrice = (device) => {
+  if (device.sellPrice !== null && device.sellPrice !== undefined && Number.isFinite(Number(device.sellPrice))) {
+    return { amount: Number(device.sellPrice), currency: device.sellCurrency || "CNY" };
+  }
+  return null;
+};
+
 export const toBaseCurrency = (amount, currency) => convertAmount(amount, currency, settings());
+
+export const deviceImageUrl = (device, { thumbnail = false } = {}) => {
+  const storedImage = thumbnail ? thumbnailUrl(device.imagePath) : safeImageUrl(device.imagePath);
+  return storedImage || RETRO_DEVICE_ILLUSTRATIONS[device.name] || null;
+};
 
 const parseDateValue = (value) => {
   if (!value) return null;
@@ -59,20 +78,45 @@ export const renderDeviceCard = (device, { compact = false } = {}) => {
   const statusClass = device.status === "deleted" ? "status status--warn" : "status";
   const days = calcDays(device.acquired, device.lost);
   const price = getDeviceBuyPrice(device);
-  const dailyCost = price && days ? formatMoney(price.amount / days, price.currency) : null;
-  const metaRows = [
-    device.brand ? `品牌：${escapeHtml(device.brand)}` : "品牌：未记录",
-    device.acquired ? `入手：${escapeHtml(device.acquired)}` : "入手：-",
-    days ? `持有时间：${days} 天` : "持有时间：-",
-    dailyCost ? `每天成本：${dailyCost}` : "每天成本：-"
-  ];
+  const sellPrice = getDeviceSellPrice(device);
+  const isSettled = device.status === "deleted" && price && sellPrice && days;
+  const sameSettlementCurrency = isSettled && price.currency === sellPrice.currency;
+  const settlementCurrency = sameSettlementCurrency ? price.currency : settings().baseCurrency;
+  const buyAmount = isSettled
+    ? (sameSettlementCurrency ? price.amount : toBaseCurrency(price.amount, price.currency))
+    : null;
+  const sellAmount = isSettled
+    ? (sameSettlementCurrency ? sellPrice.amount : toBaseCurrency(sellPrice.amount, sellPrice.currency))
+    : null;
+  const netResult = buyAmount !== null && sellAmount !== null ? sellAmount - buyAmount : null;
+  const dailyCost = !isSettled && price && days ? formatMoney(price.amount / days, price.currency) : null;
+  const financialResult = netResult === null
+    ? (dailyCost ? `每天成本：${dailyCost}` : "每天成本：-")
+    : netResult > 0
+      ? `<span class="card__money card__money--profit">最终收益：+${formatMoney(netResult, settlementCurrency)}</span>`
+      : netResult < 0
+        ? `<span class="card__money card__money--loss">每日支出：${formatMoney(Math.abs(netResult) / days, settlementCurrency)}</span>`
+        : "最终损益：持平";
+  const metaRowsByField = {
+    brand: device.brand ? `品牌：${escapeHtml(device.brand)}` : "品牌：未记录",
+    acquired: device.acquired ? `入手：${escapeHtml(device.acquired)}` : "入手：-",
+    days: days ? `持有时间：${days} 天` : "持有时间：-",
+    dailyCost: financialResult,
+    buyPrice: price ? `入手价格：${formatMoney(price.amount, price.currency)}` : "入手价格：-",
+    sellPrice: sellPrice ? `卖出价格：${formatMoney(sellPrice.amount, sellPrice.currency)}` : "卖出价格：-",
+    category: `类别：${escapeHtml(device.category ?? "未分类")}`,
+    status: `状态：${statusLabel}`,
+    tags: device.tags?.length ? `标签：${device.tags.map(escapeHtml).join("、")}` : "标签：-",
+    warrantyUntil: device.warrantyUntil ? `保修：${escapeHtml(device.warrantyUntil)}` : "保修：-",
+    acquiredLocation: device.acquiredLocation ? `入手地点：${escapeHtml(device.acquiredLocation)}` : "入手地点：-",
+    parent: device.parent ? `所属：${escapeHtml(device.parent)}` : "所属：-"
+  };
+  const metaRows = getCardMetaFields().map((field) => metaRowsByField[field]).filter(Boolean);
   const parent = device.parent ? `<span class="card__parent">${escapeHtml(device.parent)}</span>` : "";
-  const imageUrl = thumbnailUrl(device.imagePath);
-  const image = !compact
-    ? imageUrl
-      ? `<div class="card__image" style="background-image:url('${imageUrl}')" role="img" aria-label="${escapeHtml(device.name)}"></div>`
-      : `<div class="card__image card__image--empty">No Image</div>`
-    : "";
+  const imageUrl = deviceImageUrl(device, { thumbnail: true });
+  const image = imageUrl
+    ? `<div class="card__image" style="background-image:url('${imageUrl}')" role="img" aria-label="${escapeHtml(device.name)}"></div>`
+    : compact ? "" : `<div class="card__image card__image--empty">No Image</div>`;
   return `
     <article class="card${compact ? " card--compact" : ""}">
       ${image}
@@ -81,19 +125,19 @@ export const renderDeviceCard = (device, { compact = false } = {}) => {
           <div>
             <p class="card__tag">${escapeHtml(device.category ?? "未分类")}</p>
             <h3>${escapeHtml(device.name)}</h3>
-            ${compact ? `<p class="card__compact-meta">入手：${escapeHtml(device.acquired ?? "-")}</p>` : parent}
+            ${compact ? "" : parent}
           </div>
           <span class="${statusClass}">${statusLabel}</span>
         </div>
         <ul class="card__meta">${metaRows.map((row) => `<li>${row}</li>`).join("")}</ul>
-        <a class="card__link" href="${deviceDetailUrl(device.id)}">查看详情</a>
+        <a class="card__link" data-device-detail-id="${device.id}" href="${deviceDetailUrl(device.id)}">查看详情</a>
       </div>
     </article>
   `;
 };
 
 export const safeDetailImage = (device) => {
-  const imageUrl = safeImageUrl(device.imagePath);
+  const imageUrl = deviceImageUrl(device);
   return imageUrl
     ? `<div class="detail__image" style="background-image:url('${imageUrl}')" role="img" aria-label="${escapeHtml(device.name)}"></div>`
     : `<div class="detail__image detail__image--empty">No Image</div>`;

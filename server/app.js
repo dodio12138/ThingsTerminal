@@ -330,6 +330,7 @@ export const createApp = async (overrides = {}) => {
   }));
 
   app.use("/fonts", express.static(path.join(config.rootDir, "public/fonts"), { immutable: true, maxAge: "1y" }));
+  app.use("/generated", express.static(path.join(config.rootDir, "public/generated"), { immutable: true, maxAge: "1y", fallthrough: false }));
   app.get("/favicon.svg", (_req, res) => res.sendFile(path.join(config.rootDir, "public/favicon.svg")));
   app.use("/uploads", express.static(config.uploadDir, { maxAge: "7d", fallthrough: false }));
   app.use("/modules", express.static(path.join(config.rootDir, "modules"), { fallthrough: false }));
